@@ -1,16 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 import models
 import schemas
 from database import SessionLocal, engine
-from sqlalchemy.orm import joinedload
 
-#Para criar a tabela, caso não tenha
+# Cria as tabelas no banco, caso não existam
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Dependência para obter sessão do banco
 def get_db():
     db = SessionLocal()
     try:
@@ -18,46 +18,30 @@ def get_db():
     finally:
         db.close()
 
-# criando rotas para o estudantes
+# ---------------- ROTAS ----------------
 
-@app.post('/estudantes/', response_model=schemas.Estudante)
+# 1️⃣ Rota para criar estudante
+# ALTERAÇÃO: troquei response_model=schemas.Estudante -> schemas.EstudanteResponse
+@app.post('/estudantes/', response_model=schemas.EstudanteResponse)
 def criar_estudante(
     estudante: schemas.EstudanteCreate,
     db: Session = Depends(get_db)
-    ):
+):
     db_estudante = models.Estudante(
-        nome = estudante.nome,
-        perfil = models.Perfil(**estudante.perfil.dict())
+        nome=estudante.nome,
+        email=estudante.email,  # ALTERAÇÃO: incluir email
+        perfil=models.Perfil(**estudante.perfil.dict())
     )
     db.add(db_estudante)
     db.commit()
     db.refresh(db_estudante)
     return db_estudante
 
-# Para ler a rota de cima
-@app.get('/estudantes/', response_model=List[schemas.Estudante])
+# 2️⃣ Rota para listar estudantes
+# ALTERAÇÃO: troquei response_model=List[schemas.Estudante] -> List[schemas.EstudanteResponse]
+@app.get('/estudantes/', response_model=List[schemas.EstudanteResponse])
 def listar_estudantes(db: Session = Depends(get_db)):
-        estudantes = db.query(models.Estudante).options(
+    estudantes = db.query(models.Estudante).options(
         joinedload(models.Estudante.perfil)
-        ).all()
-        return estudantes
-
-@app.post(
-        '/estudantes/', 
-        response_model=schemas.EstudanteResponse)
-def create_student(student: schemas.EstudanteCreate, 
-                   db: Session = Depends(get_db)):
-
-    db_student = models.Estudante(**student.model_dump()) #variavel para salvar as informações vinda do navegador
-    db.add(db_student)
-    db.commit()
-    db.refresh(db_student)
-    return db_student
-
-#para ler a rota de estudantes
-@app.get(
-        '/estudantes/',
-         response_model=List[schemas.EstudanteResponse])#Retorno vai ser uma lista
-def read_students(db: Session = Depends(get_db)):
-    students = db.query(models.Estudante).all() #Variavel para retornar os estudantes
-    return students
+    ).all()
+    return estudantes

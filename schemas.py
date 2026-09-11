@@ -1,45 +1,48 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 
-class Perfil(BaseModel):
+# ---------------- PERFIL ----------------
+# ANTES: Perfil já tinha id, idade, endereco e era usado em tudo
+# DEPOIS: separei em Base, Create e Response
+class PerfilBase(BaseModel):
+    idade: int
+    endereco: str
+
+class PerfilCreate(PerfilBase):
+    pass
+
+class PerfilResponse(PerfilBase):
     id: int
-    idade: int
-    endereco: str
     class Config:
-        from_attributes = True
+        orm_mode = True   # ANTES: from_attributes = True
 
-class PerfilCreate(BaseModel):
-    idade: int
-    endereco: str
-
-class EstudanteBase(BaseModel):   
-     id: int
-     nome: str
-     perfil: Optional[Perfil] = None
-
-     class Config:
-      from_attributes = True
+# ---------------- ESTUDANTE ----------------
+# ANTES: EstudanteBase tinha id, nome, perfil
+# DEPOIS: EstudanteBase só tem campos comuns (nome, email)
+class EstudanteBase(BaseModel):
+    nome: str
+    email: str
 
 class EstudanteCreate(EstudanteBase):
-        nome: str
-        email: str
-        perfil: PerfilCreate
-
+    perfil: PerfilCreate   # ANTES: herdava id também
 
 class EstudanteResponse(EstudanteBase):
     id: int
-    class Config:  #Informa para biblioteca para ler os campus estudantes diretamente.
-        from_attributes = True
+    perfil: Optional[PerfilResponse] = None
+    class Config:
+        orm_mode = True   # ANTES: from_attributes = True
 
+# ---------------- MATRÍCULA ----------------
+# ANTES: MatriculaBase tinha estudante_id + nome_disciplina
+# DEPOIS: MatriculaBase só tem nome_disciplina
 class MatriculaBase(BaseModel):
-    estudante_id: int
     nome_disciplina: str
 
 class MatriculaCreate(MatriculaBase):
-    pass
+    estudante_id: int   # ANTES: herdava direto de Base
 
 class MatriculaResponse(MatriculaBase):
     id: int
-
+    estudante_id: int
     class Config:
-        from_attributes = True
+        orm_mode = True   # ANTES: from_attributes = True
