@@ -33,6 +33,18 @@ class Perfil(Base):
     )
     estudante = relationship("Estudante", back_populates='perfil')
 
+class Disciplina(Base):
+    __tablename__ = "disciplinas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    descricao = Column(String, nullable=False)
+    matriculas = relationship(
+        "Matricula",
+        back_populates='disciplina',
+        cascade="all, delete-orphan"
+    )
+
 
 class Matricula(Base):
     __tablename__ = 'matriculas'
@@ -43,3 +55,14 @@ class Matricula(Base):
 
     # relação com Estudante
     estudante = relationship("Estudante", back_populates="matriculas")
+
+class Professor(Base):
+    __tablename__ = "professores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    estudantes = relationship(
+        "Estudante", 
+        back_populates="professor",
+        cascade="all, delete-orphan"
+    )

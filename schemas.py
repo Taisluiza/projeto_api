@@ -46,3 +46,33 @@ class MatriculaResponse(MatriculaBase):
     estudante_id: int
     class Config:
         orm_mode = True   # ANTES: from_attributes = True
+
+
+class Disciplina(BaseModel):
+    id: int
+    nome: str
+    descricao: str
+
+class DisciplinaCreate(BaseModel):
+    nome: str
+    descricao: str
+
+class Matricula(BaseModel):
+    estudante_id: int
+    disciplina_id: int
+
+    class Config:
+        from_attributes = True
+
+class MatriculaCreate(BaseModel):
+    estudante_id: int
+    disciplina_id: int
+
+class Professor(BaseModel):
+    nome: str
+
+    class Config:
+        from_attributes = True
+
+class ProfessorCreate(BaseModel):
+    nome: str
