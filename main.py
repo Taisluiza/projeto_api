@@ -4,6 +4,7 @@ from typing import List
 import models
 import schemas
 from database import SessionLocal, engine
+from sqlalchemy.orm import joinedload
 
 #Para criar a tabela, caso não tenha
 models.Base.metadata.create_all(bind=engine)
@@ -17,7 +18,30 @@ def get_db():
     finally:
         db.close()
 
-#criando rotas para o estudantes
+# criando rotas para o estudantes
+
+@app.post('/estudantes/', response_model=schemas.Estudante)
+def criar_estudante(
+    estudante: schemas.EstudanteCreate,
+    db: Session = Depends(get_db)
+    ):
+    db_estudante = models.Estudante(
+        nome = estudante.nome,
+        perfil = models.Perfil(**estudante.perfil.dict())
+    )
+    db.add(db_estudante)
+    db.commit()
+    db.refresh(db_estudante)
+    return db_estudante
+
+# Para ler a rota de cima
+@app.get('/estudantes/', response_model=List[schemas.Estudante])
+def listar_estudantes(db: Session = Depends(get_db)):
+        estudantes = db.query(models.Estudante).options(
+        joinedload(models.Estudante.perfil)
+        ).all()
+        return estudantes
+
 @app.post(
         '/estudantes/', 
         response_model=schemas.EstudanteResponse)
